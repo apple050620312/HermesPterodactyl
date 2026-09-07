@@ -23,8 +23,10 @@ Hermes writes `config.yaml`, memory, sessions, skills, and all other mutable sta
 
 ## Optional OpenAI-compatible API
 
-Set `API_SERVER_ENABLED=true`, set a strong `API_SERVER_KEY`, and add a server allocation matching
-`API_SERVER_PORT` (default `8642`). The API binds to `0.0.0.0` so Wings can publish the allocation.
+Set `API_SERVER_ENABLED=true` and add a server allocation matching `API_SERVER_PORT` (default
+`8642`). If `API_SERVER_KEY` is blank, the first start generates one in
+`/home/container/.api-server-key`. When external access is disabled, the same API stays available
+only on container loopback because the dashboard uses it as an authenticated gateway control plane.
 Do not expose it publicly without a strong key and a narrow CORS allowlist.
 
 ## Image updates

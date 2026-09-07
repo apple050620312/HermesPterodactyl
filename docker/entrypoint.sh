@@ -23,6 +23,29 @@ if [[ ! -e "${DATA_DIR}/config.yaml" ]]; then
     fi
 fi
 
+if [[ ! -e "${DATA_DIR}/SOUL.md" && -f /opt/hermes/docker/SOUL.md ]]; then
+    cp /opt/hermes/docker/SOUL.md "${DATA_DIR}/SOUL.md"
+fi
+
+if [[ -f "${DATA_DIR}/config.yaml" && -f /opt/hermes/scripts/docker_config_migrate.py ]]; then
+    "${HERMES_PYTHON}" /opt/hermes/scripts/docker_config_migrate.py || \
+        echo "[Pterodactyl] WARNING: Hermes config migration failed; continuing." >&2
+fi
+
+if [[ -d /opt/hermes/skills && -f /opt/hermes/tools/skills_sync.py ]]; then
+    "${HERMES_PYTHON}" /opt/hermes/tools/skills_sync.py || \
+        echo "[Pterodactyl] WARNING: Bundled skill sync failed; continuing." >&2
+fi
+
+if [[ -z "${AGENT_BROWSER_EXECUTABLE_PATH:-}" && -d "${PLAYWRIGHT_BROWSERS_PATH:-/opt/hermes/.playwright}" ]]; then
+    browser_path="$(find "${PLAYWRIGHT_BROWSERS_PATH:-/opt/hermes/.playwright}" -type f -executable \
+        \( -name chrome -o -name chromium -o -name chrome-headless-shell \
+           -o -name headless_shell -o -name chromium-browser \) -print -quit 2>/dev/null || true)"
+    if [[ -n "${browser_path}" ]]; then
+        export AGENT_BROWSER_EXECUTABLE_PATH="${browser_path}"
+    fi
+fi
+
 generate_token() {
     local bytes="${1}"
     "${HERMES_PYTHON}" -c "import secrets; print(secrets.token_urlsafe(${bytes}))"
@@ -60,18 +83,29 @@ shutdown() {
 
 trap shutdown INT TERM
 
-if is_true "${API_SERVER_ENABLED:-false}"; then
-    api_server_key="${API_SERVER_KEY:-}"
-    if [[ ${#api_server_key} -lt 8 ]]; then
-        echo "[Pterodactyl] ERROR: API_SERVER_ENABLED=true requires an API_SERVER_KEY of at least 8 characters." >&2
-        exit 1
+if [[ -z "${API_SERVER_KEY:-}" ]]; then
+    export API_SERVER_KEY
+    API_SERVER_KEY="$(read_or_create_secret "${DATA_DIR}/.api-server-key" 48)"
+    if is_true "${API_SERVER_ENABLED:-false}"; then
+        echo "[Pterodactyl] An API server key was generated at .api-server-key"
     fi
+elif [[ ${#API_SERVER_KEY} -lt 16 ]]; then
+    echo "[Pterodactyl] ERROR: API_SERVER_KEY must contain at least 16 characters." >&2
+    exit 1
+fi
 
-    if is_true "${HERMES_DASHBOARD:-true}" && \
-        [[ "${API_SERVER_PORT:-8642}" == "${HERMES_DASHBOARD_PORT:-${SERVER_PORT:-9119}}" ]]; then
-        echo "[Pterodactyl] ERROR: The dashboard and API server cannot use the same port." >&2
-        exit 1
-    fi
+if is_true "${API_SERVER_ENABLED:-false}"; then
+    export API_SERVER_HOST="0.0.0.0"
+else
+    # Hermes' dashboard uses this loopback control plane for gateway actions.
+    # Wings cannot publish it unless the administrator explicitly enables it.
+    export API_SERVER_HOST="127.0.0.1"
+fi
+
+if is_true "${HERMES_DASHBOARD:-true}" && \
+    [[ "${API_SERVER_PORT:-8642}" == "${HERMES_DASHBOARD_PORT:-${SERVER_PORT:-9119}}" ]]; then
+    echo "[Pterodactyl] ERROR: The dashboard and API server cannot use the same port." >&2
+    exit 1
 fi
 
 if is_true "${HERMES_DASHBOARD:-true}"; then

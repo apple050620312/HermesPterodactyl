@@ -190,7 +190,7 @@
         },
         {
             "name": "API server key",
-            "description": "Bearer token for the OpenAI-compatible API. Required when the API server is enabled; use at least 8 characters.",
+            "description": "Bearer token for the OpenAI-compatible API. Leave blank to generate it at .api-server-key; Hermes requires at least 16 characters.",
             "env_variable": "API_SERVER_KEY",
             "default_value": "",
             "user_viewable": true,
@@ -206,16 +206,6 @@
             "user_viewable": true,
             "user_editable": true,
             "rules": "nullable|string|max:1024",
-            "field_type": "text"
-        },
-        {
-            "name": "API bind host",
-            "description": "Required for access through a Pterodactyl allocation.",
-            "env_variable": "API_SERVER_HOST",
-            "default_value": "0.0.0.0",
-            "user_viewable": false,
-            "user_editable": false,
-            "rules": "required|string|in:0.0.0.0",
             "field_type": "text"
         }
     ]
