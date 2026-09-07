@@ -15,6 +15,14 @@ cd "${DATA_DIR}"
 
 if [[ ! -e "${DATA_DIR}/config.yaml" ]]; then
     echo "[Pterodactyl] Creating the initial Hermes configuration."
+
+    # Start from the schema-matched template baked into the upstream image.
+    # This keeps _config_version current when the weekly image rebuild picks
+    # up a newer Hermes release.
+    if [[ -f /opt/hermes/cli-config.yaml.example ]]; then
+        cp /opt/hermes/cli-config.yaml.example "${DATA_DIR}/config.yaml"
+    fi
+
     "${HERMES_BIN}" config set model.provider "${MODEL_PROVIDER:-openrouter}"
     "${HERMES_BIN}" config set model.default "${MODEL_NAME:-anthropic/claude-sonnet-4.6}"
 

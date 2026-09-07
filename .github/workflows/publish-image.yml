@@ -96,7 +96,10 @@ jobs:
               echo "Hermes container exited during bootstrap" >&2
               exit 1
             fi
-            if sudo test -s "${smoke_dir}/config.yaml" && sudo test -s "${smoke_dir}/SOUL.md"; then
+            if sudo test -s "${smoke_dir}/config.yaml" && \
+               sudo test -s "${smoke_dir}/SOUL.md" && \
+               sudo test -s "${smoke_dir}/.api-server-key" && \
+               docker logs "${container_id}" 2>&1 | grep -Fq '[Pterodactyl] Hermes is starting.'; then
               ready=true
               break
             fi
