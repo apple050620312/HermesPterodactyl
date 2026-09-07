@@ -1,0 +1,222 @@
+{
+    "_comment": "DO NOT EDIT: FILE GENERATED AUTOMATICALLY BY PTERODACTYL PANEL - PTERODACTYL.IO",
+    "meta": {
+        "version": "PTDL_v2",
+        "update_url": "https://raw.githubusercontent.com/apple050620312/HermesPterodactyl/main/egg-hermes-agent.json"
+    },
+    "exported_at": "2026-09-08T00:00:00+08:00",
+    "name": "Hermes Agent",
+    "author": "apple050620312@users.noreply.github.com",
+    "description": "Nous Research Hermes Agent for Pterodactyl. Runs the persistent gateway and an optional authenticated dashboard. All configuration, memory, sessions, and skills are stored in /home/container.",
+    "features": null,
+    "docker_images": {
+        "GHCR (latest)": "ghcr.io/apple050620312/hermespterodactyl:latest"
+    },
+    "file_denylist": [],
+    "startup": "/opt/hermes/.venv/bin/hermes gateway run --no-supervise --external-supervisor",
+    "config": {
+        "files": "{}",
+        "startup": "{\r\n    \"done\": \"[Pterodactyl] Hermes is starting.\"\r\n}",
+        "logs": "{}",
+        "stop": "^C"
+    },
+    "scripts": {
+        "installation": {
+            "script": "#!/bin/bash\r\nset -e\r\nmkdir -p /mnt/server\r\necho 'Hermes is bundled in the runtime image; no server files need to be downloaded.'\r\n",
+            "container": "ghcr.io/ptero-eggs/installers:debian",
+            "entrypoint": "bash"
+        }
+    },
+    "variables": [
+        {
+            "name": "Model provider",
+            "description": "Hermes provider name, for example openrouter, anthropic, openai, google, deepseek, xai, nous, or custom. Used only when config.yaml does not exist yet.",
+            "env_variable": "MODEL_PROVIDER",
+            "default_value": "openrouter",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|max:64",
+            "field_type": "text"
+        },
+        {
+            "name": "Model name",
+            "description": "Provider model ID. Used only when config.yaml does not exist yet; later changes can be made in the dashboard or config.yaml.",
+            "env_variable": "MODEL_NAME",
+            "default_value": "anthropic/claude-sonnet-4.6",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|max:191",
+            "field_type": "text"
+        },
+        {
+            "name": "Custom model base URL",
+            "description": "Optional OpenAI-compatible endpoint. Usually used with provider=custom and OPENAI_API_KEY.",
+            "env_variable": "MODEL_BASE_URL",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string|max:512",
+            "field_type": "text"
+        },
+        {
+            "name": "OpenRouter API key",
+            "description": "Recommended credential when MODEL_PROVIDER is openrouter.",
+            "env_variable": "OPENROUTER_API_KEY",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string|max:512",
+            "field_type": "text"
+        },
+        {
+            "name": "OpenAI / custom endpoint API key",
+            "description": "Credential for OpenAI or an OpenAI-compatible custom endpoint.",
+            "env_variable": "OPENAI_API_KEY",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string|max:512",
+            "field_type": "text"
+        },
+        {
+            "name": "Anthropic API key",
+            "description": "Credential when MODEL_PROVIDER is anthropic.",
+            "env_variable": "ANTHROPIC_API_KEY",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string|max:512",
+            "field_type": "text"
+        },
+        {
+            "name": "Google AI API key",
+            "description": "Credential when MODEL_PROVIDER is google.",
+            "env_variable": "GOOGLE_API_KEY",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string|max:512",
+            "field_type": "text"
+        },
+        {
+            "name": "Telegram bot token",
+            "description": "Optional token from @BotFather. Supplying it enables Telegram.",
+            "env_variable": "TELEGRAM_BOT_TOKEN",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string|max:512",
+            "field_type": "text"
+        },
+        {
+            "name": "Telegram allowed users",
+            "description": "Comma-separated numeric Telegram user IDs. Hermes denies all Telegram users when no allowlist is configured.",
+            "env_variable": "TELEGRAM_ALLOWED_USERS",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string|max:1024",
+            "field_type": "text"
+        },
+        {
+            "name": "Discord bot token",
+            "description": "Optional Discord bot token. Supplying it enables Discord.",
+            "env_variable": "DISCORD_BOT_TOKEN",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string|max:512",
+            "field_type": "text"
+        },
+        {
+            "name": "Discord allowed users",
+            "description": "Comma-separated Discord user IDs. Hermes denies all Discord users when no allowlist is configured.",
+            "env_variable": "DISCORD_ALLOWED_USERS",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string|max:1024",
+            "field_type": "text"
+        },
+        {
+            "name": "Enable dashboard",
+            "description": "Starts the authenticated Hermes dashboard on the server's primary allocation.",
+            "env_variable": "HERMES_DASHBOARD",
+            "default_value": "true",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|in:true,false",
+            "field_type": "text"
+        },
+        {
+            "name": "Dashboard username",
+            "description": "Username for dashboard basic authentication.",
+            "env_variable": "HERMES_DASHBOARD_BASIC_AUTH_USERNAME",
+            "default_value": "admin",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|max:128",
+            "field_type": "text"
+        },
+        {
+            "name": "Dashboard password",
+            "description": "Leave blank to generate a strong password on first start and save it as .dashboard-password in Files.",
+            "env_variable": "HERMES_DASHBOARD_BASIC_AUTH_PASSWORD",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string|max:512",
+            "field_type": "text"
+        },
+        {
+            "name": "Enable OpenAI-compatible API",
+            "description": "Optional. If enabled, add an allocation matching API server port and set an API key of at least 8 characters.",
+            "env_variable": "API_SERVER_ENABLED",
+            "default_value": "false",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|in:true,false",
+            "field_type": "text"
+        },
+        {
+            "name": "API server port",
+            "description": "Internal API port. Add the same port as an allocation when API_SERVER_ENABLED=true.",
+            "env_variable": "API_SERVER_PORT",
+            "default_value": "8642",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|integer|between:1024,65535",
+            "field_type": "text"
+        },
+        {
+            "name": "API server key",
+            "description": "Bearer token for the OpenAI-compatible API. Required when the API server is enabled; use at least 8 characters.",
+            "env_variable": "API_SERVER_KEY",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string|max:512",
+            "field_type": "text"
+        },
+        {
+            "name": "API CORS origins",
+            "description": "Comma-separated allowed browser origins. Keep blank unless browser access is required; avoid * on public deployments.",
+            "env_variable": "API_SERVER_CORS_ORIGINS",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string|max:1024",
+            "field_type": "text"
+        },
+        {
+            "name": "API bind host",
+            "description": "Required for access through a Pterodactyl allocation.",
+            "env_variable": "API_SERVER_HOST",
+            "default_value": "0.0.0.0",
+            "user_viewable": false,
+            "user_editable": false,
+            "rules": "required|string|in:0.0.0.0",
+            "field_type": "text"
+        }
+    ]
+}
