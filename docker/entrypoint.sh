@@ -24,15 +24,18 @@ if [[ ! -e "${DATA_DIR}/config.yaml" ]]; then
 fi
 
 if [[ ! -e "${DATA_DIR}/SOUL.md" && -f /opt/hermes/docker/SOUL.md ]]; then
+    echo "[Pterodactyl] Seeding SOUL.md."
     cp /opt/hermes/docker/SOUL.md "${DATA_DIR}/SOUL.md"
 fi
 
 if [[ -f "${DATA_DIR}/config.yaml" && -f /opt/hermes/scripts/docker_config_migrate.py ]]; then
+    echo "[Pterodactyl] Migrating the Hermes configuration."
     "${HERMES_PYTHON}" /opt/hermes/scripts/docker_config_migrate.py || \
         echo "[Pterodactyl] WARNING: Hermes config migration failed; continuing." >&2
 fi
 
 if [[ -d /opt/hermes/skills && -f /opt/hermes/tools/skills_sync.py ]]; then
+    echo "[Pterodactyl] Synchronizing bundled skills."
     "${HERMES_PYTHON}" /opt/hermes/tools/skills_sync.py || \
         echo "[Pterodactyl] WARNING: Bundled skill sync failed; continuing." >&2
 fi
@@ -84,6 +87,7 @@ shutdown() {
 trap shutdown INT TERM
 
 if [[ -z "${API_SERVER_KEY:-}" ]]; then
+    echo "[Pterodactyl] Loading the persistent API server key."
     export API_SERVER_KEY
     API_SERVER_KEY="$(read_or_create_secret "${DATA_DIR}/.api-server-key" 48)"
     if is_true "${API_SERVER_ENABLED:-false}"; then

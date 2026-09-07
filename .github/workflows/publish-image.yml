@@ -49,13 +49,13 @@ jobs:
             type=raw,value=latest
             type=sha,prefix=sha-
 
-      - name: Build and publish
+      - name: Build smoke-test image
         uses: docker/build-push-action@v6
         with:
           context: .
-          platforms: linux/amd64,linux/arm64
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
+          platforms: linux/amd64
+          load: true
+          tags: hermes-pterodactyl:smoke
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
@@ -67,7 +67,7 @@ jobs:
           smoke_dir="$(mktemp -d)"
           sudo chown 988:988 "${smoke_dir}"
 
-          container_id="$(docker run --detach --rm \
+          container_id="$(docker run --detach \
             --user 988:988 \
             --read-only \
             --tmpfs /tmp:rw,exec,nosuid,size=256m \
@@ -76,11 +76,16 @@ jobs:
             --volume "${smoke_dir}:/home/container" \
             --env HERMES_DASHBOARD=false \
             --env STARTUP='sleep 90' \
-            ghcr.io/apple050620312/hermespterodactyl:latest)"
+            hermes-pterodactyl:smoke)"
 
           cleanup() {
+            docker inspect --format \
+              'status={{.State.Status}} exit={{.State.ExitCode}} error={{.State.Error}}' \
+              "${container_id}" || true
             docker logs "${container_id}" || true
-            docker stop --time 5 "${container_id}" >/dev/null 2>&1 || true
+            echo "Persistent files:"
+            sudo find "${smoke_dir}" -maxdepth 2 -printf '%P %s bytes\n' | sort || true
+            docker rm --force "${container_id}" >/dev/null 2>&1 || true
             sudo rm -rf "${smoke_dir}"
           }
           trap cleanup EXIT
@@ -105,3 +110,14 @@ jobs:
 
           sudo test -s "${smoke_dir}/.api-server-key"
           echo "Pterodactyl runtime smoke test passed"
+
+      - name: Build and publish
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
