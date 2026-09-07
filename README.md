@@ -36,8 +36,7 @@ Do not expose it publicly without a strong key and a narrow CORS allowlist.
 Reinstalling the server is not necessary: pull/recreate the server container from Panel after a new
 image is published. Persistent data remains in `/home/container`.
 
-The GHCR package must be **Public** so Wings can pull it anonymously. GitHub creates a package as
-private on its first publication; change its visibility once under the package's settings.
+The published GHCR package is public, so Wings can pull it anonymously without registry credentials.
 
 ## Notes and limitations
 

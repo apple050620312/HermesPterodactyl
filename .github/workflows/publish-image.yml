@@ -59,3 +59,49 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Smoke-test the Pterodactyl runtime
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          smoke_dir="$(mktemp -d)"
+          sudo chown 988:988 "${smoke_dir}"
+
+          container_id="$(docker run --detach --rm \
+            --user 988:988 \
+            --read-only \
+            --tmpfs /tmp:rw,exec,nosuid,size=256m \
+            --security-opt no-new-privileges \
+            --cap-drop ALL \
+            --volume "${smoke_dir}:/home/container" \
+            --env HERMES_DASHBOARD=false \
+            --env STARTUP='sleep 90' \
+            ghcr.io/apple050620312/hermespterodactyl:latest)"
+
+          cleanup() {
+            docker logs "${container_id}" || true
+            docker stop --time 5 "${container_id}" >/dev/null 2>&1 || true
+            sudo rm -rf "${smoke_dir}"
+          }
+          trap cleanup EXIT
+
+          ready=false
+          for _ in $(seq 1 45); do
+            if [[ "$(docker inspect --format '{{.State.Running}}' "${container_id}")" != true ]]; then
+              echo "Hermes container exited during bootstrap" >&2
+              exit 1
+            fi
+            if sudo test -s "${smoke_dir}/config.yaml" && sudo test -s "${smoke_dir}/SOUL.md"; then
+              ready=true
+              break
+            fi
+            sleep 2
+          done
+
+          if [[ "${ready}" != true ]]; then
+            echo "Hermes did not create its persistent files before the timeout" >&2
+            exit 1
+          fi
+
+          sudo test -s "${smoke_dir}/.api-server-key"
+          echo "Pterodactyl runtime smoke test passed"
